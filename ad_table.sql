@@ -224,20 +224,23 @@ select ca_nombre from ad_caja where ca_codigo = 1
 --Creacion de Tabla tr_factura
 drop table tr_factura
 create table tr_factura (
-fc_transaccion     int not null,
-fc_codigo         int not null,
-fc_fecha          datetime null,
-fc_cliente        int not null,
-fc_caja           int not null,
-fc_usuario        varchar(32) not null,
-fc_subtotal       decimal(8,2)  null,
-fc_iva            decimal(8,2)  null,
-fc_total          decimal(8,2)  null,     
-fc_estado         char(1) null
+fa_transaccion     int not null,
+fa_codigo         int not null,
+fa_fecha          datetime null,
+fa_cliente        int not null,
+fa_caja           int not null,
+fa_usuario        varchar(32) not null,
+fa_subtotal       decimal(8,2)  null,
+fa_iva            decimal(8,2)  null,
+fa_total          decimal(8,2)  null,     
+fa_estado         char(1) null,
+fa_fecha_pago     datetime null
 )
 select * from tr_factura
+update  tr_factura set fa_estado = 'C', fa_fecha_pago = NOW() where fa_codigo =3 and fa_estado = 'P'
 truncate table tr_factura
 alter table tr_factura add fc_usuario        varchar(32) not null
+alter table tr_factura add fc_fecha_pago     datetime null
 select * from tr_factura where fc_cliente = (select cl_codigo from cl_cliente where cl_identificacion = '1720693215') (fc_fecha BETWEEN '12/01/2020' AND '01/04/2021') and fc_codigo >= 0   limit 10
 --Creacion de Tabla tr_detalle_factura
 create table tr_detalle_factura (
@@ -342,21 +345,27 @@ ta_estado      char(1) null
 )
 select * from cl_tabla
 insert into cl_tabla values (1,'cl_tipo_consulta','Tipos de Consulta',NOW(),'V')
+insert into cl_tabla values (2,'tr_estado_factura','Estado de Factura',NOW(),'V')
 --Cl_Catalogo
 drop table cl_catalogo
 create table cl_catalogo (
 ca_codigo      int not null,
 ca_tabla      int not null,
+ca_valor       varchar(10) null,
 ca_descripcion varchar(32) null,
 ca_fecha       datetime null,
 ca_estado      char(1) null
 )
 select * from cl_catalogo
-insert into cl_catalogo values (1,1,'Consulta',NOW(),'V');
-insert into cl_catalogo values (2,1,'Tratamiento',NOW(),'V');
-insert into cl_catalogo values (3,1,'Limpieza',NOW(),'V');
-insert into cl_catalogo values (4,1,'Ortodoncia',NOW(),'V');
-insert into cl_catalogo values (5,1,'Cirugia',NOW(),'V');
+insert into cl_catalogo values (1,1,'C','Consulta',NOW(),'V');
+insert into cl_catalogo values (2,1,'T','Tratamiento',NOW(),'V');
+insert into cl_catalogo values (3,1,'L','Limpieza',NOW(),'V');
+insert into cl_catalogo values (4,1,'O','Ortodoncia',NOW(),'V');
+insert into cl_catalogo values (5,1,'CI','Cirugia',NOW(),'V');
+
+insert into cl_catalogo values (1,2,'C','Canceladas',NOW(),'V');
+insert into cl_catalogo values (2,2,'P','Pendientes',NOW(),'V');
+insert into cl_catalogo values (3,2,'T','Todas',NOW(),'V');
 
 select * from cl_catalogo where ca_tabla = (select ta_codigo from cl_tabla where ta_nombre ='cl_tipo_consulta')
 
