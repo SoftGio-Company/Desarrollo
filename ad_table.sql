@@ -98,6 +98,7 @@ ta_estado         char(1) null
 insert into ad_tr_autorizada values(100,2,NOW(),'V')
 insert into ad_tr_autorizada values(200,2,NOW(),'V')
 --Creacion de Tabla cl_cliente
+drop table cl_cliente
 create table cl_cliente (
 cl_codigo         int not null,
 cl_identificacion varchar(15) not null,
@@ -109,10 +110,12 @@ cl_email          varchar(64) null,
 cl_fecha          datetime null,
 cl_estado         char(1) null
 )
+
 select concat_ws(' ',cl_nombre,cl_apellido) from cl_cliente
 select * from cl_cliente
-insert into  cl_cliente values (1,'1000000000','Consumidor Final','','','',NOW(),'V')
+insert into  cl_cliente values (1,'999999999','Consumidor Final','','','','frigocarito@gmail.com',NOW(),'V')
 insert into  cl_cliente values (1,'1720693215','Giovanny Patricio','Cueva Valencia','Puembo Calle 24 de Mayo y Liena Ferrea','0984523918',NOW(),'V')
+insert into cl_cliente(cl_codigo,cl_identificacion,cl_nombre,cl_apellido,cl_direccion,cl_telefono,cl_email,cl_fecha,cl_estado) values ('4','0701210312','César','Cueva','San Carlos y Nuñes de Línea Ferrea','2390477','cesartadeo.cueva@gmail.com',NOW(),'V')
 update cl_cliente set cl_identificacion ='0701210312', cl_nombre='Cesar Tadeo Cueva',cl_apellido='Cueva Paladines',cl_direccion='San Carlos El Triunfo Calle 26 de Agosto Oe14-50',cl_telefono='0992774162',us_estado='V' where cl_codigo =2
 Select cl_nombre,cl_apellido,cl_direccion,cl_telefono,cl_email from cl_cliente where cl_identificacion ='1720693216'
 Select cl_nombre,cl_apellido,cl_direccion,cl_telefono,cl_email from cl_cliente where cl_identificacion =1720693216
@@ -198,6 +201,16 @@ case when tm_transaccion = 100 then sum(tm_valor)
      else 0 
 end from tr_transaccion_monetaria where tm_fecha >= CURRENT_DATE()
 group by tm_transaccion
+select * from  tr_transaccion_monetaria
+insert into tr_transaccion_monetaria(tm_secuencial,tm_fecha,tm_transaccion,tm_causa,tm_oficina,tm_usuario,tm_caja,tm_valor,tm_cheque,tm_numero_cheque,tm_descripcion,tm_estado) values ('213',NOW(),'200','2','1','12','1','780.0','0.0','0','Pag o Fernando','null')
+
+select  tm_oficina,tm_fecha,(select us_nombre from ad_usuario where us_codigo = a.tm_usuario),
+       tm_caja,
+       (select sum(tm_valor) from  tr_transaccion_monetaria where tm_caja = a.tm_caja and  tm_transaccion = 100 and  tm_fecha= a.tm_fecha) as 'tm_ingresos', 
+       (select sum(tm_valor) from  tr_transaccion_monetaria where tm_caja = a.tm_caja and  tm_transaccion = 200 and  tm_fecha= a.tm_fecha) as 'tm_egresos', 
+        (select sum(tm_valor) from  tr_transaccion_monetaria where tm_caja = a.tm_caja and  tm_transaccion = 100 and  tm_fecha= a.tm_fecha) - (select sum(tm_valor) from  tr_transaccion_monetaria where tm_caja = a.tm_caja and  tm_transaccion = 200 and tm_fecha= a.tm_fecha) as 'tm_total'
+ from tr_transaccion_monetaria a where Date(a.tm_fecha) BETWEEN '2022-09-08' AND '2022-09-11'
+group by a.tm_fecha,a.tm_caja
 
 select tm_transaccion,
 (select  sum(tm_valor) from tr_transaccion_monetaria where tm_fecha >= CURRENT_DATE() and tm_transaccion = 100 and tr_caja = a.tr_caja)
@@ -226,7 +239,7 @@ drop table tr_factura
 create table tr_factura (
 fa_transaccion     int not null,
 fa_codigo         int not null,
-fa_fecha          datetime null,
+fa_fecha          date null,
 fa_cliente        int not null,
 fa_caja           int not null,
 fa_usuario        varchar(32) not null,
@@ -234,14 +247,17 @@ fa_subtotal       decimal(8,2)  null,
 fa_iva            decimal(8,2)  null,
 fa_total          decimal(8,2)  null,     
 fa_estado         char(1) null,
-fa_fecha_pago     datetime null
+fa_fecha_pago     datetime null,
+fa_tipo_pago      char(1) null
 )
 select * from tr_factura
 update  tr_factura set fa_estado = 'C', fa_fecha_pago = NOW() where fa_codigo =3 and fa_estado = 'P'
 truncate table tr_factura
 alter table tr_factura add fc_usuario        varchar(32) not null
 alter table tr_factura add fc_fecha_pago     datetime null
+alter table tr_factura add fa_tipo_pago      char(1) null
 select * from tr_factura where fc_cliente = (select cl_codigo from cl_cliente where cl_identificacion = '1720693215') (fc_fecha BETWEEN '12/01/2020' AND '01/04/2021') and fc_codigo >= 0   limit 10
+select fa_codigo,fa_fecha,(select concat_ws(' ',cl_nombre,cl_apellido) from cl_cliente where cl_codigo = a.fa_cliente ),fa_estado,fa_subtotal,fa_iva,fa_total from tr_factura a where fa_codigo >= 0 limit 10
 --Creacion de Tabla tr_detalle_factura
 create table tr_detalle_factura (
 df_codigo         int not null,
@@ -256,6 +272,7 @@ where df_producto = pr_codigo
 and df_codigo = 110
 alter table tr_detalle_factura modify df_cantidad     decimal(8,2)  null,
 truncate table tr_detalle_factura
+select * from tr_factura
 select * from tr_detalle_factura where df_codigo = 19
 Select cl_codigo,cl_identificacion,cl_nombre,cl_apellido,cl_direccion,cl_telefono,cl_email from cl_cliente where cl_identificacion =9999999999
 Select max(tm_secuencial) from tr_transaccion_monetaria
@@ -290,6 +307,8 @@ ac_estado     char(1) null
 )
 select * from tr_apertura_caja
 SELECT * FROM tr_apertura_caja WHERE ac_fecha > DATE_SUB(NOW(), INTERVAL 1 DAY);
+
+truncate table tr_apertura_caja
 
 update tr_apertura_caja set ac_estado = 'C' where ac_estado = 'A' and ac_codigo = 8;
 
@@ -362,10 +381,11 @@ insert into cl_catalogo values (2,1,'T','Tratamiento',NOW(),'V');
 insert into cl_catalogo values (3,1,'L','Limpieza',NOW(),'V');
 insert into cl_catalogo values (4,1,'O','Ortodoncia',NOW(),'V');
 insert into cl_catalogo values (5,1,'CI','Cirugia',NOW(),'V');
-
+truncate table cl_catalogo
 insert into cl_catalogo values (1,2,'C','Canceladas',NOW(),'V');
 insert into cl_catalogo values (2,2,'P','Pendientes',NOW(),'V');
-insert into cl_catalogo values (3,2,'T','Todas',NOW(),'V');
+insert into cl_catalogo values (3,2,'A','Anuladas',NOW(),'V');
+insert into cl_catalogo values (4,2,'T','Todas',NOW(),'V');
 
 select * from cl_catalogo where ca_tabla = (select ta_codigo from cl_tabla where ta_nombre ='cl_tipo_consulta')
 
@@ -387,3 +407,4 @@ ci_estado     char(1) null
 select * from cl_cita
 
 insert into cl_cita values (1,NOW(),1,1,1,1,NOW(),CURRENT_TIME(),CURRENT_TIME(),'1','V')
+
