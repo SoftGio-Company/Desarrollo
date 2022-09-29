@@ -1,0 +1,9 @@
+create table cl_producto_his (
+ph_codigo         int not null,
+ph_fecha          datetime null,
+ph_cod_producto   int not null,
+ph_precio         decimal(8,2)  null,
+ph_cantidad_ini   decimal(8,2) not null,
+ph_cantidad_ing   decimal(8,2) not null,
+ph_cantidad_egr   decimal(8,2) not null
+)
